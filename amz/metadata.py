@@ -44,9 +44,10 @@ class MetadataHandler:
     @staticmethod
     def synced_to_lrc(synced: list) -> str:
         """Convert synced lyrics to LRC format."""
+        newline_char = '\n'
         return "\n".join(
             f"{MetadataHandler.ms_to_lrc_timestamp(item['start'])}"
-            f"{item['text'].replace('\n', ' ').strip()}"
+            f"{item['text'].replace(newline_char, ' ').strip()}"
             for item in synced
         )
 
