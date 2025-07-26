@@ -80,9 +80,11 @@ class AmazonMusicCLI:
         parser.add_argument(
             "-q",
             "--quality",
-            choices=["Max", "Master", "High", "Normal", "Medium", "Low", "Free"],
+            choices=["Max", "Master", "High", "Normal", "Medium", "Low", "Free", "Atmos_AC-4", "Atmos_EC-3"],
             default=None,
-            help="Audio quality preference (default: from config)",
+            help="Audio quality preference (default: from config)\n"
+            "  - Atmos_AC-4: Dolby Atmos AC-4 format\n"
+            "  - Atmos_EC-3: Dolby Atmos EAC3-JOC format (compatible Sonos)",
         )
 
         parser.add_argument(
@@ -157,6 +159,18 @@ class AmazonMusicCLI:
         )
 
         parser.add_argument(
+            "--list-formats",
+            action="store_true",
+            help="List available audio formats for a track/album"
+        )
+
+        parser.add_argument(
+            "--atmos",
+            action="store_true",
+            help="Download in best available Dolby Atmos format (prioritizes EAC3-JOC for Sonos compatibility)"
+        )
+
+        parser.add_argument(
             "-h", "--help", action="store_true", help="Show this help message and exit"
         )
 
@@ -209,8 +223,7 @@ class AmazonMusicCLI:
         # Token
         current_token = config.get("token", "")
         token = Prompt.ask(
-            f"[prompt]Amazon Music API token (current: {
-                self._mask_token(current_token)})[/prompt]",
+            f"[prompt]Amazon Music API token (current: {self._mask_token(current_token)})[/prompt]",
             default="",
             show_default=False,
         )
@@ -301,8 +314,7 @@ class AmazonMusicCLI:
             config = self._load_config()
             if token := config.get("token"):
                 console.print(
-                    f"[info]Stored token: {
-                        self._mask_token(token)}[/info]"
+                    f"[info]Stored token: {self._mask_token(token)}[/info]"
                 )
             else:
                 console.print("[info]No token stored[/info]")
@@ -388,6 +400,11 @@ class AmazonMusicCLI:
             self.print_help()
             sys.exit(1)
 
+        # Handle list-formats command
+        if args.list_formats:
+            self.list_available_formats(args.url_or_id)
+            sys.exit(0)
+
         # Initialize downloader with config defaults or command line overrides
         self.downloader = AmDownloader(
             path=args.output or config.get("output", default_path),
@@ -409,8 +426,15 @@ class AmazonMusicCLI:
             content_type = args.type
 
         try:
+            # Handle Atmos preference
+            quality = args.quality or config.get("quality", "Normal")
+            if args.atmos:
+                # Prioritize EAC3-JOC (Atmos_EC-3) for Sonos compatibility
+                quality = "Atmos_EC-3"
+                console.print("[info]🎵 Dolby Atmos mode enabled - prioritizing EAC3-JOC format for Sonos compatibility[/info]")
+            
             download_kwargs = {
-                "quality": args.quality or config.get("quality", "Normal"),
+                "quality": quality,
                 "track_format": args.format_track or config.get("format_track", 4),
                 "folder_format": args.format_folder or config.get("format_folder", 4),
                 "overwrite": args.overwrite,
@@ -461,8 +485,7 @@ class AmazonMusicCLI:
                 console.print(f"[info]Downloaded {len(result.tracks)} tracks[/info]")
             if hasattr(result, "zip") and result.zip:
                 console.print(
-                    f"[info]Created ZIP archive: {
-                        result.zip}[/info]"
+                    f"[info]Created ZIP archive: {result.zip}[/info]"
                 )
         else:
             console.print("\n[error]Download failed or incomplete[/error]")
@@ -470,6 +493,120 @@ class AmazonMusicCLI:
                 console.print(f"[error]Failed tracks: {len(result.failed)}[/error]")
                 for track_id in result.failed:
                     console.print(f"- {track_id}")
+
+    def list_available_formats(self, url_or_id: str):
+        """List available audio formats for a track or album."""
+        from .main import AmDownloader
+        
+        # Initialize downloader
+        downloader = AmDownloader(access_token=self.token)
+        
+        # Parse URL to get content type and ID
+        _, content_type, content_id = self.parse_url(url_or_id)
+        if content_type is None and content_id is None:
+            content_id = url_or_id
+            content_type = "track"  # Default to track for IDs
+        
+        try:
+            if content_type == "track":
+                self._list_track_formats(downloader, content_id)
+            elif content_type == "album":
+                self._list_album_formats(downloader, content_id)
+            else:
+                console.print(f"[error]Format listing not supported for {content_type}[/error]")
+        except Exception as e:
+            console.print(f"[error]Error listing formats: {str(e)}[/error]")
+
+    def _list_track_formats(self, downloader, track_id: str):
+        """List formats for a single track."""
+        # Get stream info
+        stream_res = downloader.api.get_stream_urls(track_id)
+        if not stream_res.success:
+            console.print(f"[error]Could not get stream info for track: {track_id}[/error]")
+            return
+        
+        # Get track info for title
+        track_res = downloader.api.get_track(track_id)
+        track_title = "Unknown Track"
+        if track_res.success and track_res.data:
+            track_title = f"{track_res.data.get('title', 'Unknown')} by {track_res.data.get('artist', {}).get('name', 'Unknown Artist')}"
+        
+        console.print(f"\n[info]🎵 Available formats for: {track_title}[/info]")
+        self._display_formats(stream_res.data)
+
+    def _list_album_formats(self, downloader, album_id: str):
+        """List formats for an album (shows first track as sample)."""
+        # Get album info
+        album_res = downloader.api.get_album(album_id)
+        if not album_res.success:
+            console.print(f"[error]Could not get album info: {album_id}[/error]")
+            return
+        
+        album_data = album_res.data
+        album_title = f"{album_data.get('title', 'Unknown Album')} by {album_data.get('artist', {}).get('name', 'Unknown Artist')}"
+        
+        # Get first track for format sample
+        tracks = album_data.get("tracks", [])
+        if not tracks:
+            console.print("[error]No tracks found in album[/error]")
+            return
+        
+        first_track_id = tracks[0].get("id")
+        if not first_track_id:
+            console.print("[error]No valid track ID found[/error]")
+            return
+        
+        # Get stream info for first track
+        stream_res = downloader.api.get_stream_urls(first_track_id)
+        if not stream_res.success:
+            console.print("[error]Could not get stream info[/error]")
+            return
+        
+        console.print(f"\n[info]🎶 Available formats for album: {album_title}[/info]")
+        console.print(f"[dim](Sample from first track: {tracks[0].get('title', 'Unknown')})[/dim]")
+        self._display_formats(stream_res.data)
+
+    def _display_formats(self, stream_data):
+        """Display available formats in a nice table."""
+        from rich.table import Table
+        from .main import StreamQuality
+        
+        if not stream_data:
+            console.print("[error]No stream data available[/error]")
+            return
+        
+        # Create mapping for quality to human readable
+        quality_to_human = {}
+        for human, codes in StreamQuality.QUALITY_MAP.items():
+            for code in codes:
+                quality_to_human.setdefault(code, human)
+        
+        # Create table
+        table = Table(title="Available Audio Formats", show_header=True, header_style="bold cyan")
+        table.add_column("Quality", style="green", width=12)
+        table.add_column("Format Code", style="yellow", width=15)
+        table.add_column("Bitrate", style="blue", width=10)
+        table.add_column("Sample Rate", style="magenta", width=12)
+        table.add_column("Codec", style="red", width=10)
+        
+        # Sort streams by bandwidth (highest first)
+        sorted_streams = sorted(stream_data, key=lambda x: x.get("bandwidth", 0), reverse=True)
+        
+        for stream in sorted_streams:
+            quality_code = stream.get("quality", "Unknown")
+            quality_human = quality_to_human.get(quality_code, quality_code)
+            bandwidth = stream.get("bandwidth", 0)
+            bitrate = f"{bandwidth // 1000}kbps" if bandwidth else "Unknown"
+            sample_rate = f"{stream.get('sample_rate', 'Unknown')}Hz"
+            codec = stream.get("codec", "Unknown")
+            
+            table.add_row(quality_human, quality_code, bitrate, sample_rate, codec)
+        
+        console.print(table)
+        
+        # Show recommended quality
+        console.print(f"\n[info]💡 Recommended order: {' → '.join(StreamQuality.FALLBACK_ORDER)}[/info]")
+        console.print("[dim]Use -q [quality] to specify desired quality level[/dim]")
 
     def _print_logo(self):
         logo_text = pyfiglet.figlet_format("AMAZON MUSIC", font="doom")
