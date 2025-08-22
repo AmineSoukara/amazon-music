@@ -324,7 +324,10 @@ class AmazonMusicCLI:
         if args.show_token:
             config = self._load_config()
             if token := config.get("token"):
-                console.print(f"[info]Stored token: {self._mask_token(token)}[/info]")
+                console.print(
+                    f"[info]Stored token: {
+                        self._mask_token(token)}[/info]"
+                )
             else:
                 console.print("[info]No token stored[/info]")
             sys.exit(0)
@@ -495,7 +498,10 @@ class AmazonMusicCLI:
             if hasattr(result, "tracks") and result.tracks:
                 console.print(f"[info]Downloaded {len(result.tracks)} tracks[/info]")
             if hasattr(result, "zip") and result.zip:
-                console.print(f"[info]Created ZIP archive: {result.zip}[/info]")
+                console.print(
+                    f"[info]Created ZIP archive: {
+                        result.zip}[/info]"
+                )
         else:
             console.print("\n[error]Download failed or incomplete[/error]")
             if hasattr(result, "failed") and result.failed:
