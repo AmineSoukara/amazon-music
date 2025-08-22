@@ -101,7 +101,8 @@ class StreamQuality:
 
     FALLBACK_ORDER = ["Max", "Master", "High", "Normal", "Medium", "Low", "Free"]
     ATMOS_ORDER = ["Atmos_AC-4", "Atmos_EC-3"]
-    SONOS_ATMOS_ORDER = ["Atmos_EC-3", "Atmos_AC-4"]  # Prioritize EC-3 for Sonos compatibility
+    # Prioritize EC-3 for Sonos compatibility
+    SONOS_ATMOS_ORDER = ["Atmos_EC-3", "Atmos_AC-4"]
 
     @classmethod
     def get_best_stream(
@@ -121,10 +122,12 @@ class StreamQuality:
             stream["quality_human"] = quality_to_human.get(stream.get("quality"))
 
         pref = quality_preference.strip()
-        
+
         # Determine search order based on preference and Sonos compatibility
         if pref in cls.ATMOS_ORDER:
-            search_order = cls.SONOS_ATMOS_ORDER if sonos_compatible else cls.ATMOS_ORDER
+            search_order = (
+                cls.SONOS_ATMOS_ORDER if sonos_compatible else cls.ATMOS_ORDER
+            )
         else:
             search_order = cls._get_fallback_order(pref.title())
 
@@ -327,7 +330,9 @@ class AmDownloader:
 
             if not from_batch:
                 section(
-                    f"🎵 Downloading track: {track_data['title']} by {track_data['artist']['name']}"
+                    f"🎵 Downloading track: {
+                        track_data['title']} by {
+                        track_data['artist']['name']}"
                 )
 
             # Fetch album data if not provided
@@ -348,7 +353,9 @@ class AmDownloader:
 
             # Process stream and download
             sonos_mode = quality == "Atmos_EC-3"
-            best_stream = StreamQuality.get_best_stream(stream_res.data, quality, sonos_compatible=sonos_mode)
+            best_stream = StreamQuality.get_best_stream(
+                stream_res.data, quality, sonos_compatible=sonos_mode
+            )
             if not best_stream:
                 error(f"[Stream] No suitable stream for track: {track_id}")
                 return result
