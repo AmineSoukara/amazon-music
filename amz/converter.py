@@ -74,8 +74,8 @@ class AudioConverter:
         # Define codec map
         codec_map = {
             "flac": (".flac", "copy", []),
-            "ec-3": (".m4a", "aac", ["-metadata:s:a:0", "atmos=true"]),
-            "ac-4.02.02.00": (".m4a", "aac", ["-metadata:s:a:0", "atmos=true"]),
+            "ec-3": (".m4a", "ac3", ["-metadata:s:a:0", "atmos=true"]),
+            "ac-4.02.02.00": (".m4a", "ac4", ["-metadata:s:a:0", "atmos=true"]),
         }
 
         # Opus special handling
