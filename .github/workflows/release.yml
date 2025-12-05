@@ -8,12 +8,12 @@ jobs:
   build-release:
     name: 🐍 Build Release
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, 'push')  # 👈 Only run if commit message includes 'push'
+    if: contains(github.event.head_commit.message, 'push')
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: 1️⃣ Set Up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
@@ -38,15 +38,17 @@ jobs:
 
   publish-release:
     name: 📦 Publish Release To PyPI
-    needs: [build-release]
+    needs: build-release
     runs-on: ubuntu-latest
+    if: needs.build-release.result == 'success'
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: paillier-dist
           path: dist
 
-      - uses: pypa/gh-action-pypi-publish@v1.13.0
+      - name: 🚀 Upload To PyPI
+        uses: pypa/gh-action-pypi-publish@v1.13.0
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
