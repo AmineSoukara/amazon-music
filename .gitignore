@@ -211,4 +211,10 @@ Music
 Downloads
 temp
 test.py
+
 amz/app.py
+amz/__pycache__/
+amz/tests.py
+amz/venv/
+amz/.amazon_music_config.json
+amz/.env

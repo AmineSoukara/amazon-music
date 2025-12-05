@@ -26,7 +26,7 @@ A **FastAPI REST API** for Amazon Music offering metadata, playback, search, and
 </p>
 
 <h4>
-  <a href="https://amazon-music-api.vercel.app">API Docs</a>
+  <a href="https://amz.dezalty.com">API Docs</a>
   <span> · </span>
   <a href="https://github.com/AmineSoukara/amazon-music/issues">Report Bug</a>
   <span> · </span>
@@ -99,7 +99,7 @@ options:
 </div>
 
 ## 🔐 Auth Token
-Star the repository on GitHub, then click "Get Auth Tokens" to access your authentication credentials. [Click Here](https://amazon-music-api.vercel.app/login)
+Star the repository on GitHub, then click "Get Auth Tokens" to access your authentication credentials. [Click Here](https://amz.dezalty.com/login)
 
 ## 🎵 Quality
 
@@ -133,7 +133,7 @@ Star the repository on GitHub, then click "Get Auth Tokens" to access your authe
 | 4  | ARTIST_ALBUM_QUALITY    | {album_artist} - {album} ({quality})    |
 
 ## 🔗 Quick Links
-- **Base URL**: [Click Here](https://amazon-music-api.vercel.app)
+- **Base URL**: [Click Here](https://amz.dezalty.com)
 
 ---
 

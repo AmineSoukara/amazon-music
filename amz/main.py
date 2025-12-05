@@ -159,7 +159,7 @@ class AmDownloader:
         self,
         path: str = None,  # Defaults to Windows Music folder
         path_temp: str = None,  # Defaults to "temp" inside Music folder
-        api_url: str = "https://amazon-music-api.vercel.app",
+        api_url: str = "https://amz.dezalty.com",
         access_token: str = "",
         target_extension: AudioExtension = AudioExtension.OPUS,
     ):
