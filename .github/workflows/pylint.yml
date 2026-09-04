@@ -1,0 +1,36 @@
+name: ⚙️ Fixes & Improves
+on:
+  push:
+    branches: [main, beta]
+jobs:
+  PEP8:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.12
+      - name: Install Python lint libraries
+        run: pip install autopep8 autoflake isort black
+      - name: Check for showstoppers
+        run: |
+          autopep8 --verbose --in-place --recursive --aggressive --aggressive amz/* .
+
+      - name: Remove unused imports and variables
+        run: |
+          autoflake --in-place --recursive --remove-all-unused-imports --remove-unused-variables --ignore-init-module-imports .
+      - name: lint with isort and black
+        run: |
+          isort amz/* .
+          black amz/* .
+
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: 'DAMIEN : ⚙ Fixes'
+          commit_options: '--no-verify'
+          repository: .
+          commit_user_name: AmineSoukara
+          commit_user_email: 65272894+AmineSoukara@users.noreply.github.com
+          commit_author: AmineSoukara <65272894+AmineSoukara@users.noreply.github.com>
+          

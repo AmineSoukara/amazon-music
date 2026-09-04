@@ -1,0 +1,54 @@
+name: 🆕️ Build & Release - PyPI
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-release:
+    name: 🐍 Build Release
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, 'push')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 1️⃣ Set Up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 2️⃣ Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+
+      - name: 3️⃣ Build Package
+        run: python -m build
+
+      - name: 4️⃣ Validate Package
+        run: |
+          pip install twine
+          twine check dist/*
+
+      - name: 5️⃣ Save Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: paillier-dist
+          path: ./dist
+
+  publish-release:
+    name: 📦 Publish Release To PyPI
+    needs: build-release
+    runs-on: ubuntu-latest
+    if: needs.build-release.result == 'success'
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: paillier-dist
+          path: dist
+
+      - name: 🚀 Upload To PyPI
+        uses: pypa/gh-action-pypi-publish@v1.13.0
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
