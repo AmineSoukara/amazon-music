@@ -324,10 +324,8 @@ class AmazonMusicCLI:
         if args.show_token:
             config = self._load_config()
             if token := config.get("token"):
-                console.print(
-                    f"[info]Stored token: {
-                        self._mask_token(token)}[/info]"
-                )
+                console.print(f"[info]Stored token: {
+                        self._mask_token(token)}[/info]")
             else:
                 console.print("[info]No token stored[/info]")
             sys.exit(0)
@@ -498,10 +496,8 @@ class AmazonMusicCLI:
             if hasattr(result, "tracks") and result.tracks:
                 console.print(f"[info]Downloaded {len(result.tracks)} tracks[/info]")
             if hasattr(result, "zip") and result.zip:
-                console.print(
-                    f"[info]Created ZIP archive: {
-                        result.zip}[/info]"
-                )
+                console.print(f"[info]Created ZIP archive: {
+                        result.zip}[/info]")
         else:
             console.print("\n[error]Download failed or incomplete[/error]")
             if hasattr(result, "failed") and result.failed:
@@ -598,12 +594,10 @@ class AmazonMusicCLI:
             return
 
         console.print(f"\n[info]🎶 Available formats for album: {album_title}[/info]")
-        console.print(
-            f"[dim](Sample from first track: {
+        console.print(f"[dim](Sample from first track: {
                 tracks[0].get(
                     'title',
-                    'Unknown')})[/dim]"
-        )
+                    'Unknown')})[/dim]")
         self._display_formats(stream_res.data)
 
     def _display_formats(self, stream_data):
@@ -650,11 +644,9 @@ class AmazonMusicCLI:
         console.print(table)
 
         # Show recommended quality
-        console.print(
-            f"\n[info]💡 Recommended order: {
+        console.print(f"\n[info]💡 Recommended order: {
                 ' → '.join(
-                    StreamQuality.FALLBACK_ORDER)}[/info]"
-        )
+                    StreamQuality.FALLBACK_ORDER)}[/info]")
         console.print("[dim]Use -q [quality] to specify desired quality level[/dim]")
 
     def _print_logo(self):

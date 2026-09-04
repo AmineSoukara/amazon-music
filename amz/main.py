@@ -329,11 +329,9 @@ class AmDownloader:
             result.data = track_data
 
             if not from_batch:
-                section(
-                    f"🎵 Downloading track: {
+                section(f"🎵 Downloading track: {
                         track_data['title']} by {
-                        track_data['artist']['name']}"
-                )
+                        track_data['artist']['name']}")
 
             # Fetch album data if not provided
             if (
